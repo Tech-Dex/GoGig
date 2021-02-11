@@ -17,7 +17,7 @@ pp = pprint.PrettyPrinter(indent=4)
 name_subreddit_list = ['forhire', 'jobbit', 'freelance_forhire', 'RemoteJobs']
 sent_submission_id_list = list()
 keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'software',
-                    'backend', 'frontend', 'fullstack', 'web',
+                    'backend', 'frontend', 'fullstack', 'web', 'full-stack',
                     'java', 'python', 'javascript', 'typescript', 'node', 'nodejs', 'deno', 'denojs',
                     'angular', 'react', 'vue', 'django', 'flask', 'fastapi', 'spring', 'boot']
 
@@ -38,7 +38,7 @@ async def on_ready():
             sys.exit("The bot is not linked to the Guild you declared")
 
 
-def build_discord_embed_message(submission):
+def build_discord_embed_message(submission, keyword):
     description = submission.selftext
     if len(description) > 2048:
         description = submission.selftext[:2044] + '...'
@@ -56,6 +56,7 @@ def build_discord_embed_message(submission):
         embed.set_thumbnail(url=f'{submission.preview["images"][0]["source"]["url"]}')
     except AttributeError:
         pass
+    embed.add_field(name=f'#️⃣', value=f'{keyword.capitalize()}', inline=False)
     embed.add_field(name=f'👍', value=f'{submission.ups}', inline=True)
     embed.add_field(name=f'👎', value=f'{submission.downs}', inline=True)
     embed.add_field(name=f'💬', value=f'{submission.num_comments}', inline=True)
@@ -63,10 +64,10 @@ def build_discord_embed_message(submission):
     return embed
 
 
-async def send_discord_message(submission):
+async def send_discord_message(submission, keyword):
     channel = client.get_channel(736319558285131788)
 
-    await channel.send(embed=build_discord_embed_message(submission))
+    await channel.send(embed=build_discord_embed_message(submission, keyword))
     # print(f'Link : https://www.reddit.com{submission.permalink}')
 
 
@@ -80,7 +81,7 @@ async def search_subreddits():
                 if (keyword_job in submission.permalink or keyword_job in submission.selftext) \
                         and submission.link_flair_text == 'Hiring' \
                         and submission.id not in sent_submission_id_list:
-                    await send_discord_message(submission)
+                    await send_discord_message(submission, keyword_job)
                     sent_submission_id_list.append(submission.id)
 
 
