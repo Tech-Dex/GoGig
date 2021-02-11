@@ -5,7 +5,7 @@ import time
 import discord
 import os
 import sys
-import asyncio
+from discord.ext import tasks
 
 reddit = asyncpraw.Reddit(client_id=f'{os.getenv("CLIENT_ID")}',
                           client_secret=f'{os.getenv("CLIENT_SECRET")}',
@@ -16,7 +16,7 @@ reddit = asyncpraw.Reddit(client_id=f'{os.getenv("CLIENT_ID")}',
 pp = pprint.PrettyPrinter(indent=4)
 name_subreddit_list = ['forhire', 'jobbit', 'freelance_forhire', 'RemoteJobs']
 sent_submission_id_list = list()
-keyword_job_list = ['dev', 'junior', 'mid', 'intermediate', 'senior', 'software',
+keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'software',
                     'backend', 'frontend', 'fullstack', 'web',
                     'java', 'python', 'javascript', 'typescript', 'node', 'nodejs', 'deno', 'denojs',
                     'angular', 'react', 'vue', 'django', 'flask', 'fastapi', 'spring', 'boot']
@@ -70,20 +70,19 @@ async def send_discord_message(submission):
     # print(f'Link : https://www.reddit.com{submission.permalink}')
 
 
+@tasks.loop(seconds=10.0)
 async def search_subreddits():
     await client.wait_until_ready()
-    while True:
-        for subreddit_name in name_subreddit_list:
-            subreddit = await reddit.subreddit(subreddit_name)
-            async for submission in subreddit.new(limit=10):
-                for keyword_job in keyword_job_list:
-                    if (keyword_job in submission.permalink or keyword_job in submission.selftext) \
-                            and submission.link_flair_text == 'Hiring' \
-                            and submission.id not in sent_submission_id_list:
-                        await send_discord_message(submission)
-                        sent_submission_id_list.append(submission.id)
-        await asyncio.sleep(10)
+    for subreddit_name in name_subreddit_list:
+        subreddit = await reddit.subreddit(subreddit_name)
+        async for submission in subreddit.new(limit=10):
+            for keyword_job in keyword_job_list:
+                if (keyword_job in submission.permalink or keyword_job in submission.selftext) \
+                        and submission.link_flair_text == 'Hiring' \
+                        and submission.id not in sent_submission_id_list:
+                    await send_discord_message(submission)
+                    sent_submission_id_list.append(submission.id)
 
 
-client.loop.create_task(search_subreddits())
+search_subreddits.start()
 client.run(DISCORD_TOKEN)
