@@ -2,6 +2,8 @@
 import asyncpraw
 import pprint
 import time
+import asyncprawcore
+import asyncio
 import discord
 import os
 import sys
@@ -23,13 +25,20 @@ keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'sof
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 DISCORD_GUILD = os.getenv('DISCORD_GUILD')
+ADMIN_ROLE_ID = os.getenv('ADMIN_ROLE_ID')
+CHANNEL_TO_POST_ID = os.getenv('CHANNEL_TO_POST_ID')
+CHANNEL_LOGS_ID = os.getenv('CHANNEL_LOGS_ID')
+GUILD_ID: int = -1
+
 client = discord.Client()
 
 
 @client.event
 async def on_ready():
+    global GUILD_ID
     for guild in client.guilds:
         if guild.name == DISCORD_GUILD:
+            GUILD_ID = guild.id
             print(
                 f'{client.user} is connected to the following guild:\n'
                 f'{guild.name}(id: {guild.id})'
@@ -65,24 +74,49 @@ def build_discord_embed_message(submission, keyword):
 
 
 async def send_discord_message(submission, keyword):
-    channel = client.get_channel(736319558285131788)
+    channel = client.get_channel(int(CHANNEL_TO_POST_ID))
 
     await channel.send(embed=build_discord_embed_message(submission, keyword))
     # print(f'Link : https://www.reddit.com{submission.permalink}')
 
 
-@tasks.loop(seconds=10.0)
+def build_discord_embed_logs(admin, e):
+    embed = discord.Embed(title=f' {e.__name__}',
+                          color=discord.Colour(0xe74c3c),
+                          description=f'{e.__doc__}',
+                          )
+
+    return embed
+
+
+async def tag_admin_in_case_of_exceptions(e):
+    global GUILD_ID
+    channel = client.get_channel(int(CHANNEL_LOGS_ID))
+    if GUILD_ID != -1:
+        guild = client.get_guild(id=GUILD_ID)
+        admin = discord.utils.get(guild.roles, id=int(ADMIN_ROLE_ID))
+        await channel.send(f'{admin.mention} I\'m sick, please help me!', embed=build_discord_embed_logs(admin, e))
+
+
+@tasks.loop(seconds=1.0)
 async def search_subreddits():
     await client.wait_until_ready()
     for subreddit_name in name_subreddit_list:
-        subreddit = await reddit.subreddit(subreddit_name)
-        async for submission in subreddit.new(limit=10):
-            for keyword_job in keyword_job_list:
-                if (keyword_job in submission.permalink or keyword_job in submission.selftext) \
-                        and submission.link_flair_text == 'Hiring' \
-                        and submission.id not in sent_submission_id_list:
-                    await send_discord_message(submission, keyword_job)
-                    sent_submission_id_list.append(submission.id)
+        try:
+            subreddit = await reddit.subreddit(subreddit_name)
+            async for submission in subreddit.new(limit=10):
+                for keyword_job in keyword_job_list:
+                    if (keyword_job in submission.permalink or keyword_job in submission.selftext) \
+                            and submission.link_flair_text == 'Hiring' \
+                            and submission.id not in sent_submission_id_list:
+                        await send_discord_message(submission, keyword_job)
+                        sent_submission_id_list.append(submission.id)
+        except asyncprawcore.exceptions.ServerError as e:
+            await tag_admin_in_case_of_exceptions(e)
+            await asyncio.sleep(10)
+        except Exception as e:
+            await tag_admin_in_case_of_exceptions(e)
+            await asyncio.sleep(10)
 
 
 search_subreddits.start()

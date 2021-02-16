@@ -3,7 +3,7 @@
 A Discord bot that is using AsyncPRAW, a Reddit API to find jobs on subreddits and post them to your Discord channel.
 I created this bot for programmers so feel free to edit keywords list and subreddit list for your requirements.
 
-![demo](img/demo.gif)
+Mie imi![demo](img/demo.gif)
 ## Setup
 You'll need to create:
  - Reddit Applications: https://www.reddit.com/prefs/apps
@@ -17,6 +17,9 @@ export REDDIT_USER="YOUR_REDDIT_USER"
 export REDDIT_PASSWORD="YOUR_REDDIT_PASSWORD"
 export CLIENT_ID="YOUR_CLIENT_ID"
 export CLIENT_SECRET="YOUR_CLIENT_SECRET"
+export ADMIN_ROLE_ID="YOUR_ADMIN_ROLE_ID"
+export CHANNEL_TO_POST_ID="YOUR_CHANNEL_TO_POST_ID"
+export CHANNEL_LOGS_ID="YOUR_CHANNEL_LOGS_ID"
 ```
 
 ## Usage
