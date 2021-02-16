@@ -9,19 +9,15 @@ import os
 import sys
 from discord.ext import tasks
 
-reddit = asyncpraw.Reddit(client_id=f'{os.getenv("CLIENT_ID")}',
-                          client_secret=f'{os.getenv("CLIENT_SECRET")}',
-                          user_agent='Reddit Job Finder Discord Bot',
-                          username=f'{os.getenv("REDDIT_USER")}',
-                          password=f'{os.getenv("REDDIT_PASSWORD")}')
-
 pp = pprint.PrettyPrinter(indent=4)
+
 name_subreddit_list = ['forhire', 'jobbit', 'freelance_forhire', 'RemoteJobs']
 sent_submission_id_list = list()
 keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'software',
                     'backend', 'frontend', 'fullstack', 'web', 'full-stack',
                     'java', 'python', 'javascript', 'typescript', 'node', 'nodejs', 'deno', 'denojs',
                     'angular', 'react', 'vue', 'django', 'flask', 'fastapi', 'spring', 'boot']
+illegal_char_list = ['.', ',', '!', '?']
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 DISCORD_GUILD = os.getenv('DISCORD_GUILD')
@@ -30,6 +26,11 @@ CHANNEL_TO_POST_ID = os.getenv('CHANNEL_TO_POST_ID')
 CHANNEL_LOGS_ID = os.getenv('CHANNEL_LOGS_ID')
 GUILD_ID: int = -1
 
+reddit = asyncpraw.Reddit(client_id=f'{os.getenv("CLIENT_ID")}',
+                          client_secret=f'{os.getenv("CLIENT_SECRET")}',
+                          user_agent='Reddit Job Finder Discord Bot',
+                          username=f'{os.getenv("REDDIT_USER")}',
+                          password=f'{os.getenv("REDDIT_PASSWORD")}')
 client = discord.Client()
 
 
@@ -73,13 +74,6 @@ def build_discord_embed_message(submission, keyword):
     return embed
 
 
-async def send_discord_message(submission, keyword):
-    channel = client.get_channel(int(CHANNEL_TO_POST_ID))
-
-    await channel.send(embed=build_discord_embed_message(submission, keyword))
-    # print(f'Link : https://www.reddit.com{submission.permalink}')
-
-
 def build_discord_embed_logs(e):
     embed = discord.Embed(title=f' {e.__name__}',
                           color=discord.Colour(0xe74c3c),
@@ -89,7 +83,14 @@ def build_discord_embed_logs(e):
     return embed
 
 
-async def tag_admin_in_case_of_exceptions(e):
+async def send_discord_message(submission, keyword):
+    channel = client.get_channel(int(CHANNEL_TO_POST_ID))
+
+    await channel.send(embed=build_discord_embed_message(submission, keyword))
+    # print(f'Link : https://www.reddit.com{submission.permalink}')
+
+
+async def mention_admin_in_case_of_exceptions(e):
     global GUILD_ID
     channel = client.get_channel(int(CHANNEL_LOGS_ID))
     if GUILD_ID != -1:
@@ -98,7 +99,15 @@ async def tag_admin_in_case_of_exceptions(e):
         await channel.send(f'{admin.mention} I\'m sick, please help me!', embed=build_discord_embed_logs(admin, e))
 
 
-@tasks.loop(seconds=1.0)
+async def search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission):
+    for illegal_char in illegal_char_list:
+        word = word.replace(illegal_char, '')
+    if word.lower() == keyword_job.lower() and submission.id not in sent_submission_id_list:
+        await send_discord_message(submission, keyword_job)
+        sent_submission_id_list.append(submission.id)
+
+
+@tasks.loop(seconds=10.0)
 async def search_subreddits():
     await client.wait_until_ready()
     for subreddit_name in name_subreddit_list:
@@ -106,16 +115,16 @@ async def search_subreddits():
             subreddit = await reddit.subreddit(subreddit_name)
             async for submission in subreddit.new(limit=10):
                 for keyword_job in keyword_job_list:
-                    if (keyword_job in submission.permalink or keyword_job in submission.selftext) \
-                            and submission.link_flair_text == 'Hiring' \
-                            and submission.id not in sent_submission_id_list:
-                        await send_discord_message(submission, keyword_job)
-                        sent_submission_id_list.append(submission.id)
+                    if submission.link_flair_text == 'Hiring':
+                        for word in submission.permalink:
+                            await search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission)
+                        for word in submission.selftext:
+                            await search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission)
         except asyncprawcore.exceptions.ServerError as e:
-            await tag_admin_in_case_of_exceptions(e)
+            await mention_admin_in_case_of_exceptions(e)
             await asyncio.sleep(10)
         except Exception as e:
-            await tag_admin_in_case_of_exceptions(e)
+            await mention_admin_in_case_of_exceptions(e)
             await asyncio.sleep(10)
 
 
