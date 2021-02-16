@@ -80,7 +80,7 @@ async def send_discord_message(submission, keyword):
     # print(f'Link : https://www.reddit.com{submission.permalink}')
 
 
-def build_discord_embed_logs(admin, e):
+def build_discord_embed_logs(e):
     embed = discord.Embed(title=f' {e.__name__}',
                           color=discord.Colour(0xe74c3c),
                           description=f'{e.__doc__}',
