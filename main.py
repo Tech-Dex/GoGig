@@ -17,7 +17,7 @@ keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'sof
                     'backend', 'frontend', 'fullstack', 'web', 'full-stack',
                     'java', 'python', 'javascript', 'typescript', 'node', 'nodejs', 'deno', 'denojs',
                     'angular', 'react', 'vue', 'django', 'flask', 'fastapi', 'spring', 'boot']
-illegal_char_list = ['.', ',', '!', '?']
+illegal_char_list = ['.', ',', '!', '?', '[', ']']
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 DISCORD_GUILD = os.getenv('DISCORD_GUILD')
@@ -96,7 +96,7 @@ async def mention_admin_in_case_of_exceptions(e):
     if GUILD_ID != -1:
         guild = client.get_guild(id=GUILD_ID)
         admin = discord.utils.get(guild.roles, id=int(ADMIN_ROLE_ID))
-        await channel.send(f'{admin.mention} I\'m sick, please help me!', embed=build_discord_embed_logs(admin, e))
+        await channel.send(f'{admin.mention} I\'m sick, please help me!', embed=build_discord_embed_logs(e))
 
 
 async def search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission):
@@ -107,7 +107,7 @@ async def search_for_illegal_words_and_trigger_message_sending(word, keyword_job
         sent_submission_id_list.append(submission.id)
 
 
-@tasks.loop(seconds=10.0)
+@tasks.loop(seconds=60.0)
 async def search_subreddits():
     await client.wait_until_ready()
     for subreddit_name in name_subreddit_list:
@@ -115,10 +115,10 @@ async def search_subreddits():
             subreddit = await reddit.subreddit(subreddit_name)
             async for submission in subreddit.new(limit=10):
                 for keyword_job in keyword_job_list:
-                    if submission.link_flair_text == 'Hiring':
-                        for word in submission.permalink:
+                    if submission.link_flair_text == 'Hiring' and submission.id not in sent_submission_id_list:
+                        for word in submission.permalink.replace('/', '_').split('_'):
                             await search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission)
-                        for word in submission.selftext:
+                        for word in submission.selftext.split(' '):
                             await search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission)
         except asyncprawcore.exceptions.ServerError as e:
             await mention_admin_in_case_of_exceptions(e)
