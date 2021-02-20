@@ -115,7 +115,7 @@ async def search_subreddits():
             subreddit = await reddit.subreddit(subreddit_name)
             async for submission in subreddit.new(limit=10):
                 for keyword_job in keyword_job_list:
-                    if submission.link_flair_text == 'Hiring' and submission.id not in sent_submission_id_list:
+                    if 'hiring' in submission.link_flair_text.lower() and submission.id not in sent_submission_id_list:
                         for word in submission.permalink.replace('/', '_').split('_'):
                             await search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission)
                         for word in submission.selftext.split(' '):
