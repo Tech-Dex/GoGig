@@ -75,7 +75,7 @@ def build_discord_embed_message(submission, keyword):
 
 
 def build_discord_embed_logs(e):
-    embed = discord.Embed(title=f' {e.__name__}',
+    embed = discord.Embed(title=f' {e}',
                           color=discord.Colour(0xe74c3c),
                           description=f'{e.__doc__}',
                           )
@@ -115,11 +115,15 @@ async def search_subreddits():
             subreddit = await reddit.subreddit(subreddit_name)
             async for submission in subreddit.new(limit=10):
                 for keyword_job in keyword_job_list:
-                    if 'hiring' in submission.link_flair_text.lower() and submission.id not in sent_submission_id_list:
-                        for word in submission.permalink.replace('/', '_').split('_'):
-                            await search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission)
-                        for word in submission.selftext.split(' '):
-                            await search_for_illegal_words_and_trigger_message_sending(word, keyword_job, submission)
+                    if submission.link_flair_text:
+                        if 'hiring' in submission.link_flair_text.lower() and \
+                                submission.id not in sent_submission_id_list:
+                            for word in submission.permalink.replace('/', '_').split('_'):
+                                await search_for_illegal_words_and_trigger_message_sending(word, keyword_job,
+                                                                                           submission)
+                            for word in submission.selftext.split(' '):
+                                await search_for_illegal_words_and_trigger_message_sending(word, keyword_job,
+                                                                                           submission)
         except asyncprawcore.exceptions.ServerError as e:
             await mention_admin_in_case_of_exceptions(e)
             await asyncio.sleep(10)
