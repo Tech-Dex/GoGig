@@ -49,10 +49,13 @@ async def on_ready():
 
 
 def build_discord_embed_message(submission, keyword):
+    title = submission.title
+    if len(title) > 256:
+        title = submission.title[:252] + '...'
     description = submission.selftext
     if len(description) > 2048:
         description = submission.selftext[:2044] + '...'
-    embed = discord.Embed(title=f'{submission.title}',
+    embed = discord.Embed(title=f'{title}',
                           color=discord.Colour(0x82de09),
                           url=f'https://www.reddit.com{submission.permalink}',
                           description=f'{description}',
