@@ -1,4 +1,13 @@
-# Reddit Job Finder Discord Bot
+# GoGIG - A Reddit Job Finder As A Discord Bot
+<p align="center">
+  <img src="https://github.com/Tech-Dex/Reddit-Job-Finder-Discord-Bot/blob/master/img/logo.png" />
+</p>
+<p align="center">
+	<a href="https://gitmoji.dev">
+		<img src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square"
+			 alt="Gitmoji">
+	</a>
+</p>
 
 A Discord bot that is using AsyncPRAW, a Reddit API to find jobs on subreddits and post them to your Discord channel.
 I created this bot for programmers so feel free to edit keywords list and subreddit list for your requirements.
