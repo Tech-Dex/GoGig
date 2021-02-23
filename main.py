@@ -7,15 +7,16 @@ import asyncio
 import discord
 import os
 import sys
-from discord.ext import tasks
+from discord.ext import tasks, commands
+import commands as bot_commands
 
 pp = pprint.PrettyPrinter(indent=4)
 
 name_subreddit_list = ['forhire', 'jobbit', 'freelance_forhire', 'RemoteJobs']
 sent_submission_id_list = list()
-keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'software', 'dev' , 'devs'
+keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'software', 'dev', 'devs',
                     'backend', 'frontend', 'fullstack', 'web', 'full-stack',
-                    'front end', 'back end', 'front-end', 'back-end'
+                    'front end', 'back end', 'front-end', 'back-end',
                     'java', 'python', 'javascript', 'typescript', 'node', 'nodejs', 'deno', 'denojs',
                     'angular', 'react', 'vue', 'django', 'flask', 'fastapi', 'spring', 'boot']
 illegal_char_list = ['.', ',', '!', '?', '[', ']']
@@ -32,7 +33,8 @@ reddit = asyncpraw.Reddit(client_id=f'{os.getenv("CLIENT_ID")}',
                           user_agent='Reddit Job Finder Discord Bot',
                           username=f'{os.getenv("REDDIT_USER")}',
                           password=f'{os.getenv("REDDIT_PASSWORD")}')
-client = discord.Client()
+
+client = commands.Bot(command_prefix='$sudo', help_command=None)
 
 
 @client.event
@@ -129,12 +131,16 @@ async def search_subreddits():
                                 await search_for_illegal_words_and_trigger_message_sending(word, keyword_job,
                                                                                            submission)
         except asyncprawcore.exceptions.ServerError as e:
-            await mention_admin_in_case_of_exceptions(e)
+            if not bot_commands.SNOOZE:
+                await mention_admin_in_case_of_exceptions(e)
             await asyncio.sleep(10)
         except Exception as e:
-            await mention_admin_in_case_of_exceptions(e)
+            if not bot_commands.SNOOZE:
+                await mention_admin_in_case_of_exceptions(e)
             await asyncio.sleep(10)
 
 
+client.add_command(bot_commands.snooze)
+client.add_command(bot_commands.help)
 search_subreddits.start()
 client.run(DISCORD_TOKEN)
