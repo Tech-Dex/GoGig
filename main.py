@@ -13,8 +13,9 @@ pp = pprint.PrettyPrinter(indent=4)
 
 name_subreddit_list = ['forhire', 'jobbit', 'freelance_forhire', 'RemoteJobs']
 sent_submission_id_list = list()
-keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'software',
+keyword_job_list = ['developer', 'junior', 'mid', 'intermediate', 'senior', 'software', 'dev' , 'devs'
                     'backend', 'frontend', 'fullstack', 'web', 'full-stack',
+                    'front end', 'back end', 'front-end', 'back-end'
                     'java', 'python', 'javascript', 'typescript', 'node', 'nodejs', 'deno', 'denojs',
                     'angular', 'react', 'vue', 'django', 'flask', 'fastapi', 'spring', 'boot']
 illegal_char_list = ['.', ',', '!', '?', '[', ']']
@@ -78,7 +79,7 @@ def build_discord_embed_message(submission, keyword):
 
 
 def build_discord_embed_logs(e):
-    embed = discord.Embed(title=f' {e}',
+    embed = discord.Embed(title=f'🚑 {e}',
                           color=discord.Colour(0xe74c3c),
                           description=f'{e.__doc__}',
                           )
