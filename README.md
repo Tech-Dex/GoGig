@@ -1,4 +1,4 @@
-# Reddit Job Finder Discord Bot
+# GoGIG - A Reddit Job Finder As A Discord Bot
 <p align="center">
   <img src="https://github.com/Tech-Dex/Reddit-Job-Finder-Discord-Bot/blob/master/img/logo.png" />
 </p>
