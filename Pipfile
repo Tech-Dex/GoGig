@@ -6,8 +6,13 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-asyncpraw = "*"
+asyncpraw = "==7.2.0"
 discord = "*"
+typing-extensions = "*"
+autoflake = "*"
+isort = "*"
+black = "*"
+vulture = "*"
 
 [requires]
 python_version = "3.6"
