@@ -15,7 +15,7 @@ import commands as bot_commands
 pp = pprint.PrettyPrinter(indent=4)
 
 name_subreddit_list = ["forhire", "jobbit", "freelance_forhire", "RemoteJobs"]
-sent_submission_id_list = list()
+sent_submission_id_list = []
 keyword_job_list = [
     "developer",
     "junior",
