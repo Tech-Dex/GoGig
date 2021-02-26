@@ -11,7 +11,7 @@ ADMIN_ROLE_ID = os.getenv("ADMIN_ROLE_ID")
 @commands.command(name="_snooze")
 async def snooze(ctx, *args):
     global SNOOZE
-    if ctx.message.author.id == int(ADMIN_ROLE_ID):
+    if discord.utils.get(ctx.message.author.roles, id=int(ADMIN_ROLE_ID)):
         if len(args) > 1 or len(args) == 0:
             await ctx.send("The command form is: ``` $sudo_snooze <on> or <off> ```")
         elif len(args) == 1:
@@ -32,7 +32,9 @@ async def snooze(ctx, *args):
                     "The command form is: ``` $sudo_snooze <on> or <off> ```"
                 )
     else:
-        await ctx.send("The command is available only for administrators. Please contact one of them!")
+        await ctx.send(
+            "The command is available only for administrators. Please contact one of them!"
+        )
 
 
 @commands.command(name="_help")
