@@ -190,6 +190,7 @@ async def search_subreddits():
             await asyncio.sleep(10)
 
 
+client.add_command(bot_commands.ping)
 client.add_command(bot_commands.snooze)
 client.add_command(bot_commands.custom_help)
 search_subreddits.start()

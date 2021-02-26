@@ -65,3 +65,8 @@ def embed_help():
     embed.add_field(name="_help", value="Shows this message", inline=False)
 
     return embed
+
+
+@commands.command(name="_ping")
+async def ping(ctx):
+    await ctx.send("Stop pinging me. I am alive!")
