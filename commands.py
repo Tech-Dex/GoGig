@@ -1,31 +1,38 @@
+import os
 import time
 
 import discord
 from discord.ext import commands
 
 SNOOZE = False
+ADMIN_ROLE_ID = os.getenv("ADMIN_ROLE_ID")
 
 
 @commands.command(name="_snooze")
 async def snooze(ctx, *args):
     global SNOOZE
-    if len(args) > 1 or len(args) == 0:
-        await ctx.send("The command form is: ``` $sudo_snooze <on> or <off> ```")
-    elif len(args) == 1:
-        if str(args[0]).lower() == "off":
-            if SNOOZE is False:
-                await ctx.send("Snooze is already off!")
-            else:
-                SNOOZE = False
-                await ctx.send("Snooze is off")
-        elif str(args[0]).lower() == "on":
-            if SNOOZE is True:
-                await ctx.send("Snooze is already on!")
-            else:
-                SNOOZE = True
-                await ctx.send("Snooze is on!")
-        else:
+    if ctx.message.author.id == int(ADMIN_ROLE_ID):
+        if len(args) > 1 or len(args) == 0:
             await ctx.send("The command form is: ``` $sudo_snooze <on> or <off> ```")
+        elif len(args) == 1:
+            if str(args[0]).lower() == "off":
+                if SNOOZE is False:
+                    await ctx.send("Snooze is already off!")
+                else:
+                    SNOOZE = False
+                    await ctx.send("Snooze is off")
+            elif str(args[0]).lower() == "on":
+                if SNOOZE is True:
+                    await ctx.send("Snooze is already on!")
+                else:
+                    SNOOZE = True
+                    await ctx.send("Snooze is on!")
+            else:
+                await ctx.send(
+                    "The command form is: ``` $sudo_snooze <on> or <off> ```"
+                )
+    else:
+        await ctx.send("The command is available only for administrators. Please contact one of them!")
 
 
 @commands.command(name="_help")
