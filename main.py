@@ -98,8 +98,6 @@ def build_discord_embed_message(submission, keyword):
         url=f"https://www.reddit.com{submission.permalink}",
         description=f"{description}",
     )
-    embed.set_image(url=f"")
-    embed.set_thumbnail(url=f"")
     embed.set_author(name=f"{submission.author.name}")
     embed.set_footer(
         text=f"Subreddit {submission.subreddit_name_prefixed} "
@@ -109,10 +107,10 @@ def build_discord_embed_message(submission, keyword):
         embed.set_thumbnail(url=f'{submission.preview["images"][0]["source"]["url"]}')
     except AttributeError:
         pass
-    embed.add_field(name=f"#️⃣", value=f"{keyword.capitalize()}", inline=False)
-    embed.add_field(name=f"👍", value=f"{submission.ups}", inline=True)
-    embed.add_field(name=f"👎", value=f"{submission.downs}", inline=True)
-    embed.add_field(name=f"💬", value=f"{submission.num_comments}", inline=True)
+    embed.add_field(name="#️⃣", value=f"{keyword.capitalize()}", inline=False)
+    embed.add_field(name="👍", value=f"{submission.ups}", inline=True)
+    embed.add_field(name="👎", value=f"{submission.downs}", inline=True)
+    embed.add_field(name="💬", value=f"{submission.num_comments}", inline=True)
 
     return embed
 
@@ -193,6 +191,6 @@ async def search_subreddits():
 
 
 client.add_command(bot_commands.snooze)
-client.add_command(bot_commands.help)
+client.add_command(bot_commands.custom_help)
 search_subreddits.start()
 client.run(DISCORD_TOKEN)
