@@ -12,8 +12,8 @@ from discord.ext import commands, tasks
 
 import commands as bot_commands
 from core.config import (
-    ADMIN_ROLE_ID,
-    CHANNEL_LOGS_ID,
+    DEXTER_ADMIN_ROLE_ID,
+    DEXTER_CHANNEL_LOGS_ID,
     CLIENT_ID,
     CLIENT_SECRET,
     DATABASE_NAME,
@@ -106,9 +106,9 @@ async def send_discord_message(submission, keyword, channel_id):
 
 
 async def mention_admin_in_case_of_exceptions(e):
-    channel = client.get_channel(CHANNEL_LOGS_ID)
+    channel = client.get_channel(DEXTER_CHANNEL_LOGS_ID)
     guild = client.get_guild(id=DEXTER_DISCORD_GUILD_ID)
-    admin = discord.utils.get(guild.roles, id=int(ADMIN_ROLE_ID))
+    admin = discord.utils.get(guild.roles, id=int(DEXTER_ADMIN_ROLE_ID))
     await channel.send(
         f"{admin.mention} I'm sick, please help me!",
         embed=build_discord_embed_logs(e),
