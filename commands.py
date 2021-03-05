@@ -4,7 +4,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from core.config import ADMIN_ROLE_ID, DATABASE_NAME
+from core.config import DEXTER_ADMIN_ROLE_ID, DATABASE_NAME
 from db.mongodb import get_database
 
 SNOOZE = False
@@ -13,7 +13,7 @@ SNOOZE = False
 @commands.command(name="_snooze")
 async def snooze(ctx, *args):
     global SNOOZE
-    if discord.utils.get(ctx.message.author.roles, id=ADMIN_ROLE_ID):
+    if discord.utils.get(ctx.message.author.roles, id=DEXTER_ADMIN_ROLE_ID):
         if len(args) > 1 or len(args) == 0:
             await ctx.send("The command form is: ``` $sudo_snooze <on> or <off> ```")
         elif len(args) == 1:
