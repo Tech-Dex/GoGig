@@ -1,0 +1,29 @@
+import os
+
+from databases import DatabaseURL
+
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_GUILD = os.getenv("DISCORD_GUILD")
+REDDIT_USER = os.getenv("REDDIT_USER")
+REDDIT_PASSWORD = os.getenv("REDDIT_PASSWORD")
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+MONGO_HOST = os.getenv("MONGO_HOST")
+MONGO_PORT = int(os.getenv("MONGO_PORT"))
+MONGO_USER = os.getenv("MONGO_USER")
+MONGO_PASS = os.getenv("MONGO_PASSWORD")
+MONGO_DB = os.getenv("MONGO_DB")
+MAX_CONNECTIONS_COUNT = os.getenv("MAX_CONNECTIONS_COUNT")
+MIN_CONNECTIONS_COUNT = os.getenv("MIN_CONNECTIONS_COUNT")
+MONGODB_URL = str(
+    DatabaseURL(
+        f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
+    )
+)
+
+DATABASE_NAME = MONGO_DB
+
+DEXTER_ID = int(os.getenv("DEXTER_ID"))
+DEXTER_ADMIN_ROLE_ID = int(os.getenv("DEXTER_ADMIN_ROLE_ID"))
+DEXTER_CHANNEL_LOGS_ID = int(os.getenv("DEXTER_CHANNEL_LOGS_ID"))
+DEXTER_DISCORD_GUILD_ID = int(os.getenv("DISCORD_GUILD_ID"))

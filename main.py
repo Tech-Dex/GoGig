@@ -1,9 +1,9 @@
 #! usr/bin/env python3
 import asyncio
-import os
+import logging
 import pprint
-import sys
 import time
+from datetime import datetime
 
 import asyncpraw
 import asyncprawcore
@@ -11,61 +11,41 @@ import discord
 from discord.ext import commands, tasks
 
 import commands as bot_commands
+from core.config import (
+    ADMIN_ROLE_ID,
+    CHANNEL_LOGS_ID,
+    CLIENT_ID,
+    CLIENT_SECRET,
+    DATABASE_NAME,
+    DEXTER_DISCORD_GUILD_ID,
+    DEXTER_ID,
+    DISCORD_TOKEN,
+    REDDIT_PASSWORD,
+    REDDIT_USER,
+)
+from db.mongodb import get_database
+from db.mongodb_init import close_mongo_connection, connect_to_mongo
 
 pp = pprint.PrettyPrinter(indent=4)
 
-name_subreddit_list = ["forhire", "jobbit", "freelance_forhire"]
-sent_submission_id_list = []
-keyword_job_list = [
-    "developer",
-    "junior",
-    "mid",
-    "intermediate",
-    "senior",
-    "software",
-    "dev",
-    "devs",
-    "backend",
-    "frontend",
-    "fullstack",
-    "web",
-    "full-stack",
-    "front end",
-    "back end",
-    "front-end",
-    "back-end",
-    "java",
-    "python",
-    "javascript",
-    "typescript",
-    "node",
-    "nodejs",
-    "deno",
-    "denojs",
-    "angular",
-    "react",
-    "vue",
-    "django",
-    "flask",
-    "fastapi",
-    "spring",
-    "boot",
-]
+logFormatter = logging.Formatter(
+    "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"
+)
+rootLogger = logging.getLogger()
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+rootLogger.addHandler(consoleHandler)
+rootLogger.setLevel(logging.INFO)
+
 illegal_char_list = [".", ",", "!", "?", "[", "]"]
 
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-DISCORD_GUILD = os.getenv("DISCORD_GUILD")
-ADMIN_ROLE_ID = os.getenv("ADMIN_ROLE_ID")
-CHANNEL_TO_POST_ID = os.getenv("CHANNEL_TO_POST_ID")
-CHANNEL_LOGS_ID = os.getenv("CHANNEL_LOGS_ID")
-GUILD_ID: int = -1
 
 reddit = asyncpraw.Reddit(
-    client_id=f'{os.getenv("CLIENT_ID")}',
-    client_secret=f'{os.getenv("CLIENT_SECRET")}',
+    client_id=CLIENT_ID,
+    client_secret=CLIENT_SECRET,
     user_agent="Reddit Job Finder Discord Bot",
-    username=f'{os.getenv("REDDIT_USER")}',
-    password=f'{os.getenv("REDDIT_PASSWORD")}',
+    username=REDDIT_USER,
+    password=REDDIT_PASSWORD,
 )
 
 client = commands.Bot(command_prefix="$sudo", help_command=None)
@@ -73,16 +53,10 @@ client = commands.Bot(command_prefix="$sudo", help_command=None)
 
 @client.event
 async def on_ready():
-    global GUILD_ID
+    connect_to_mongo()
+    print(f"{client.user} is connected to the following guild:\n")
     for guild in client.guilds:
-        if guild.name == DISCORD_GUILD:
-            GUILD_ID = guild.id
-            print(
-                f"{client.user} is connected to the following guild:\n"
-                f"{guild.name}(id: {guild.id})"
-            )
-        else:
-            sys.exit("The bot is not linked to the Guild you declared")
+        print(f"{guild.name}(id: {guild.id})")
 
 
 def build_discord_embed_message(submission, keyword):
@@ -125,27 +99,24 @@ def build_discord_embed_logs(e):
     return embed
 
 
-async def send_discord_message(submission, keyword):
-    channel = client.get_channel(int(CHANNEL_TO_POST_ID))
-
+async def send_discord_message(submission, keyword, channel_id):
+    channel = client.get_channel(channel_id)
     await channel.send(embed=build_discord_embed_message(submission, keyword))
     # print(f'Link : https://www.reddit.com{submission.permalink}')
 
 
 async def mention_admin_in_case_of_exceptions(e):
-    global GUILD_ID
-    channel = client.get_channel(int(CHANNEL_LOGS_ID))
-    if GUILD_ID != -1:
-        guild = client.get_guild(id=GUILD_ID)
-        admin = discord.utils.get(guild.roles, id=int(ADMIN_ROLE_ID))
-        await channel.send(
-            f"{admin.mention} I'm sick, please help me!",
-            embed=build_discord_embed_logs(e),
-        )
+    channel = client.get_channel(CHANNEL_LOGS_ID)
+    guild = client.get_guild(id=DEXTER_DISCORD_GUILD_ID)
+    admin = discord.utils.get(guild.roles, id=int(ADMIN_ROLE_ID))
+    await channel.send(
+        f"{admin.mention} I'm sick, please help me!",
+        embed=build_discord_embed_logs(e),
+    )
 
 
 async def search_for_illegal_words_and_trigger_message_sending(
-    word, keyword_job, submission
+    word, keyword_job, submission, sent_submission_id_list, conn, channel_id
 ):
     for illegal_char in illegal_char_list:
         word = word.replace(illegal_char, "")
@@ -153,45 +124,102 @@ async def search_for_illegal_words_and_trigger_message_sending(
         word.lower() == keyword_job.lower()
         and submission.id not in sent_submission_id_list
     ):
-        await send_discord_message(submission, keyword_job)
+        await send_discord_message(submission, keyword_job, channel_id)
         sent_submission_id_list.append(submission.id)
+        submission_json = {
+            "submission_permalink": submission.permalink,
+            "submission_id": submission.id,
+            "created_at": datetime.now(),
+        }
+        await conn[DATABASE_NAME]["submission"].insert_one(submission_json)
 
 
-@tasks.loop(seconds=60.0)
+@tasks.loop(seconds=10.0)
 async def search_subreddits():
     await client.wait_until_ready()
-    for subreddit_name in name_subreddit_list:
-        try:
-            subreddit = await reddit.subreddit(subreddit_name)
-            async for submission in subreddit.new(limit=10):
-                for keyword_job in keyword_job_list:
-                    if submission.link_flair_text:
-                        if (
-                            "hiring" in submission.link_flair_text.lower()
-                            and submission.id not in sent_submission_id_list
-                        ):
-                            for word in submission.permalink.replace("/", "_").split(
-                                "_"
-                            ):
-                                await search_for_illegal_words_and_trigger_message_sending(
-                                    word, keyword_job, submission
-                                )
-                            for word in submission.selftext.split(" "):
-                                await search_for_illegal_words_and_trigger_message_sending(
-                                    word, keyword_job, submission
-                                )
-        except asyncprawcore.exceptions.ServerError as e:
-            if not bot_commands.SNOOZE:
-                await mention_admin_in_case_of_exceptions(e)
-            await asyncio.sleep(10)
-        except Exception as e:
-            if not bot_commands.SNOOZE:
-                await mention_admin_in_case_of_exceptions(e)
-            await asyncio.sleep(10)
+    connect_to_mongo()
+    conn = get_database()
+    for guild in client.guilds:
+        db_channel = await conn[DATABASE_NAME]["channel"].find_one(
+            {"guild_id": guild.id}
+        )
+        if db_channel is None or db_channel["channel_id"] is None:
+            print("Pass, channel not set")
+        else:
+            channel_id = int(db_channel["channel_id"])
+            subreddit_raw_list = conn[DATABASE_NAME]["subreddit"].find(
+                {"guild_id": guild.id}
+            )
+            job_keyword_raw_list = conn[DATABASE_NAME]["job_keyword"].find(
+                {"guild_id": guild.id}
+            )
+            job_keyword_list = []
+            sent_submission_raw_list = conn[DATABASE_NAME]["submission"].find()
+            sent_submission_id_list = []
+            async for submission in sent_submission_raw_list:
+                sent_submission_id_list.append(submission["submission_id"])
+            async for job_keyword_obj in job_keyword_raw_list:
+                job_keyword_list.append(job_keyword_obj)
+            async for subreddit_obj in subreddit_raw_list:
+                try:
+                    subreddit = await reddit.subreddit(subreddit_obj["subreddit"])
+                    async for submission in subreddit.new(limit=10):
+                        for job_keyword_obj in job_keyword_list:
+                            job_keyword = job_keyword_obj["job_keyword"]
+                            if submission.link_flair_text:
+                                if (
+                                    "hiring" in submission.link_flair_text.lower()
+                                    and submission.id not in sent_submission_id_list
+                                ):
+                                    for word in submission.permalink.replace(
+                                        "/", "_"
+                                    ).split("_"):
+                                        await search_for_illegal_words_and_trigger_message_sending(
+                                            word,
+                                            job_keyword,
+                                            submission,
+                                            sent_submission_id_list,
+                                            conn,
+                                            channel_id,
+                                        )
+                                    for word in submission.selftext.split(" "):
+                                        await search_for_illegal_words_and_trigger_message_sending(
+                                            word,
+                                            job_keyword,
+                                            submission,
+                                            sent_submission_id_list,
+                                            conn,
+                                            channel_id,
+                                        )
+                except asyncprawcore.exceptions.ServerError as e:
+                    if not bot_commands.SNOOZE:
+                        await mention_admin_in_case_of_exceptions(e)
+                    await asyncio.sleep(10)
+                except Exception as e:
+                    if not bot_commands.SNOOZE:
+                        await mention_admin_in_case_of_exceptions(e)
+                    await asyncio.sleep(10)
+
+
+@commands.command(name="_exit")
+async def graceful_exit(ctx):
+    if ctx.message.author.id == DEXTER_ID:
+        close_mongo_connection()
+        await client.close()
+    else:
+        await ctx.send(
+            "```Why the fuck are you trying to kill me?\n"
+            "Only Dexter#4335 is allowed to do this.\n"
+            "If you have any problem please, contact him!```"
+        )
 
 
 client.add_command(bot_commands.ping)
 client.add_command(bot_commands.snooze)
 client.add_command(bot_commands.custom_help)
+client.add_command(graceful_exit)
+client.add_command(bot_commands.subreddit)
+client.add_command(bot_commands.job_keyword)
+client.add_command(bot_commands.channel)
 search_subreddits.start()
 client.run(DISCORD_TOKEN)
