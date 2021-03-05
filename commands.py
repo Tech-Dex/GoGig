@@ -186,7 +186,7 @@ async def job_keyword(ctx, *args):
             subreddit_json = {
                 "job_keyword": arg,
                 "user": ctx.message.author.name,
-                "user_id": ctx.message.author,
+                "user_id": ctx.message.author.id,
                 "guild_id": ctx.message.guild.id,
                 "created_at": datetime.now(),
             }
