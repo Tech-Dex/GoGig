@@ -1,23 +1,19 @@
-FROM python:3
+FROM python:3.12-slim
 
-ENV PYTHONNUNBUFFERED 1
+WORKDIR /app
 
-ENV DISCORD_TOKEN YOUR_DISCORD_TOKEN
-ENV DISCORD_GUILD YOUR_DISCORD_GUILD
-ENV REDDIT_USER YOUR_REDDIT_USER
-ENV REDDIT_PASSWORD YOUR_REDDIT_PASSWORD
-ENV CLIENT_ID YOUR_CLIENT_ID
-ENV CLIENT_SECRET YOUR_CLIENT_SECRET
-ENV ADMIN_ROLE_ID YOUR_ADMIN_ROLE_ID
-ENV CHANNEL_TO_POST_ID YOUR_CHANNEL_TO_POST_ID
-ENV CHANNEL_LOGS_ID YOUR_CHANNEL_LOGS_ID
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /bot-code
-WORKDIR /bot-code
-ADD . /bot-code
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN apt-get update
-RUN pip install -r requirements.txt
+COPY . .
 
-CMD ["main.py"]
-ENTRYPOINT ["python3"]
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "main.py"]
+

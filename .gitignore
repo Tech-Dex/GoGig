@@ -1,0 +1,60 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+*.env
+
+# Alembic migration cache
+alembic/versions/__pycache__/
+alembic.ini
+
+# Database files
+*.sqlite3
+*.db
+
+# Docker
+*.pid
+
+# VSCode
+.vscode/
+
+# JetBrains
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python egg
+*.egg-info/
+
+dist/
+build/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Lint/format
+.mypy_cache/
+.pytest_cache/
+
+# Misc
+*.bak
+*.swp
+
+# Ignore Alembic generated files except env.py and README
+alembic/versions/*
+!alembic/README
+!alembic/env.py
+
