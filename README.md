@@ -1,7 +1,7 @@
 # GoGig
 
 <p align="center">
-  <img src="images/logo.png" alt="GoGig Logo" width="200"/>
+  <img src="images/logo.png" alt="GoGig Logo"/>
 </p>
 
 GoGig is a Discord bot project designed to automate job searching and subreddit/keyword management using Reddit and PostgreSQL. It features modular command handling, database-backed configuration, and supports Docker-based deployment.
@@ -65,10 +65,6 @@ GoGig/
 - Run linter:
   ```bash
   ./lint.sh
-  ```
-- Run Vulture (ignore .venv and alembic):
-  ```bash
-  vulture . --min-confidence 70 --exclude .venv,alembic
   ```
 
 ## Contributing
