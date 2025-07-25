@@ -1,6 +1,6 @@
 services:
   gogig:
-    build: ghcr.io/tech-dex/gogig:latest
+    image: ghcr.io/tech-dex/gogig:latest
     container_name: gogig
     env_file:
       - stack.env
