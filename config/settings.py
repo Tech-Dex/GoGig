@@ -10,6 +10,7 @@ class Settings:
     DISCORD_TOKEN: str = os.getenv("DISCORD_TOKEN")
     DISCORD_GUILD_ID: int = int(os.getenv("DISCORD_GUILD_ID", 0))
     DISCORD_CHANNEL_ID: int = int(os.getenv("DISCORD_CHANNEL_ID", 0))
+    DISCORD_LOGS_CHANNEL_ID: int = int(os.getenv("DISCORD_LOGS_CHANNEL_ID", 0))
 
     # Reddit Configuration
     REDDIT_CLIENT_ID: str = os.getenv("REDDIT_CLIENT_ID")

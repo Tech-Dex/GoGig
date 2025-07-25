@@ -36,6 +36,7 @@ class JobCommands(commands.Cog):
             await self._check_and_post_jobs()
         except Exception as e:
             logger.error(f"Error in job check loop: {e}")
+            await self._log_error_to_channel(f"Error in job check loop: {e}")
 
     @job_check_loop.before_loop
     async def before_job_check_loop(self):
@@ -67,15 +68,22 @@ class JobCommands(commands.Cog):
                     await self._post_job_to_discord(job)
                     await job_service.mark_as_posted(job.id)
 
+    async def _log_error_to_channel(self, error_message):
+        """Send error message to the logs channel."""
+        channel = self.bot.get_channel(settings.DISCORD_LOGS_CHANNEL_ID)
+        if channel:
+            await channel.send(f":warning: {error_message}")
+
     async def _post_job_to_discord(self, job):
         """Post job to Discord channel"""
         channel = self.bot.get_channel(settings.DISCORD_CHANNEL_ID)
         if not channel:
             logger.error(f"Channel {settings.DISCORD_CHANNEL_ID} not found")
+            await self._log_error_to_channel(f"Channel {settings.DISCORD_CHANNEL_ID} not found")
             return
 
         embed = discord.Embed(
-            title=job.title,
+            title=job.title[:250] + "..." if len(job.title) > 250 else job.title,
             url=job.url,
             description=(
                 job.content[:500] + "..." if len(job.content) > 500 else job.content
