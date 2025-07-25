@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    container_name: gogig_app
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  db:
+    image: postgres:latest
+    container_name: gogig_db
+    environment:
+      - POSTGRES_DB=gogig_db
+      - POSTGRES_USER=gogig_user
+      - POSTGRES_PASSWORD=gogig_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+

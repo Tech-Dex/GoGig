@@ -1,48 +1,74 @@
-# GoGIG - A Reddit Job Finder As A Discord Bot
+# GoGig
+
 <p align="center">
-  <img src="https://github.com/Tech-Dex/Reddit-Job-Finder-Discord-Bot/blob/master/img/logo.png" />
-</p>
-<p align="center">
-	<a href="https://gitmoji.dev">
-		<img src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square"
-			 alt="Gitmoji">
-	</a>
-	<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+  <img src="images/logo.png" alt="GoGig Logo"/>
 </p>
 
-A Discord bot that is using AsyncPRAW, a Reddit API to find jobs on subreddits and post them to your Discord channel.
-I created this bot for programmers so feel free to edit keywords list and subreddit list for your requirements.
+GoGig is a Discord bot project designed to automate job searching and subreddit/keyword management using Reddit and PostgreSQL. It features modular command handling, database-backed configuration, and supports Docker-based deployment.
 
-![demo](img/demo.gif)
-## Setup
-You'll need to create:
- - Reddit Applications: https://www.reddit.com/prefs/apps
- - Discord Bot: https://discord.com/developers/applications
- 
-Create a local.env and update with your details:
-```bash
-make envs
+## Features
+- Discord bot with job search automation
+- Subreddit and keyword management (add/list/remove via commands)
+- SQLAlchemy ORM models and Alembic migrations
+- PostgreSQL database integration
+- Docker and Docker Compose support
+- Modular command structure (cogs)
+
+## Getting Started
+
+### Prerequisites
+- Docker & Docker Compose
+- Python 3.12+
+
+### Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/gogig.git
+   cd gogig
+   ```
+2. Copy and edit environment variables:
+   ```bash
+   cp sample.env .env
+   # Edit .env as needed
+   ```
+3. Build and start with Docker Compose:
+   ```bash
+   docker-compose up --build
+   # or
+   docker-compose -f default.docker-compose.yml up --build
+   ```
+
+### Database Migrations
+- Alembic is used for migrations:
+  ```bash
+  alembic upgrade head
+  alembic revision --autogenerate -m "Your migration message"
+  ```
+
+## Project Structure
+```
+GoGig/
+├── alembic/           # Alembic migration scripts
+├── cogs/              # Discord bot command modules
+├── config/            # Configuration and database setup
+├── models/            # SQLAlchemy ORM models
+├── services/          # Business logic/services
+├── main.py            # Bot entry point
+├── Dockerfile         # Docker build file
+├── default.docker-compose.yml # Docker Compose with PostgreSQL
+├── requirements.txt   # Python dependencies
+└── README.md          # Project documentation
 ```
 
-## Usage with Pipenv
-
-```bash
-make install && make shell
-make load
-make start
-```
-
-## Usage with Requirements.txt
-```bash
-make requirements
-make load
-make start
-```
+## Useful Commands
+- Add/list/remove subreddits and keywords via Discord bot commands
+- Run linter:
+  ```bash
+  ./lint.sh
+  ```
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-Please make sure to test before pull request.
-
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+MIT
