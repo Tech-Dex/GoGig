@@ -23,19 +23,19 @@ class AdminCommands(commands.Cog):
             embed.add_field(name="Users", value=len(self.bot.users), inline=True)
             embed.add_field(
                 name="Active Jobs",
-                value=await session.execute(
+                value=(await session.execute(
                     select(func.count(Job.id)).where(Job.is_posted is True)
-                ),
+                )).scalar(),
                 inline=True,
             )
             embed.add_field(
                 name="Subreddits",
-                value=await session.execute(select(func.count(Subreddit.id))),
+                value=(await session.execute(select(func.count(Subreddit.id)))).scalar(),
                 inline=True,
             )
             embed.add_field(
                 name="Keywords",
-                value=await session.execute(select(func.count(Keyword.id))),
+                value=(await session.execute(select(func.count(Keyword.id)))).scalar(),
                 inline=True,
             )
             embed.set_footer(
