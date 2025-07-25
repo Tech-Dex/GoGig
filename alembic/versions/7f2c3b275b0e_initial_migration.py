@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: e25a3318ad99
+Revision ID: 7f2c3b275b0e
 Revises:
-Create Date: 2025-07-24 17:27:27.901916
+Create Date: 2025-07-24 17:49:34.543883
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "e25a3318ad99"
+revision: str = "7f2c3b275b0e"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -32,8 +32,8 @@ def upgrade() -> None:
         sa.Column("author", sa.String(length=100), nullable=False),
         sa.Column("subreddit", sa.String(length=100), nullable=False),
         sa.Column("url", sa.String(length=1000), nullable=False),
+        sa.Column("is_posted", sa.Boolean(), nullable=False),
         sa.Column("created_utc", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("posted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),

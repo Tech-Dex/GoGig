@@ -6,6 +6,7 @@ from config.database import db_manager
 from models.job import Job
 from models.keyword import Keyword
 from models.subreddit import Subreddit
+from services.settings_service import get_setting, set_setting
 
 
 class AdminCommands(commands.Cog):
@@ -129,6 +130,28 @@ class AdminCommands(commands.Cog):
             await session.execute(delete(Keyword).where(Keyword.word.in_(items)))
             await session.commit()
         await ctx.send(f"Removed keywords: {', '.join(items)}")
+
+    @commands.command(name="set_channel")
+    @commands.has_permissions(administrator=True)
+    async def set_channel(self, ctx, channel_type: str, channel: discord.TextChannel):
+        """Set the Discord channel for jobs or logs. Usage: !set_channel jobs #channel or !set_channel logs #channel"""
+        channel_type = channel_type.lower()
+        if channel_type not in ["jobs", "logs"]:
+            await ctx.send("Channel type must be 'jobs' or 'logs'.")
+            return
+        key = "DISCORD_CHANNEL_ID" if channel_type == "jobs" else "DISCORD_LOGS_CHANNEL_ID"
+        async with db_manager.get_session() as session:
+            await set_setting(session, key, str(channel.id))
+        await ctx.send(f"{channel_type.capitalize()} channel set to {channel.mention} (ID: {channel.id}).")
+
+    @commands.command(name="show_channels")
+    @commands.has_permissions(administrator=True)
+    async def show_channels(self, ctx):
+        """Show current Discord and logs channel IDs from the database."""
+        async with db_manager.get_session() as session:
+            discord_channel = await get_setting(session, "DISCORD_CHANNEL_ID")
+            logs_channel = await get_setting(session, "DISCORD_LOGS_CHANNEL_ID")
+        await ctx.send(f"Discord channel ID: {discord_channel}\nLogs channel ID: {logs_channel}")
 
 
 async def setup(bot):

@@ -10,6 +10,7 @@ from models.keyword import Keyword
 from models.subreddit import Subreddit
 from services.job_service import JobService
 from services.reddit_service import RedditService
+from services.settings_service import get_setting
 
 logger = logging.getLogger(__name__)
 
@@ -70,16 +71,20 @@ class JobCommands(commands.Cog):
 
     async def _log_error_to_channel(self, error_message):
         """Send error message to the logs channel."""
-        channel = self.bot.get_channel(settings.DISCORD_LOGS_CHANNEL_ID)
+        async with db_manager.get_session() as session:
+            channel_id = await get_setting(session, "DISCORD_LOGS_CHANNEL_ID")
+        channel = self.bot.get_channel(int(channel_id)) if channel_id else None
         if channel:
             await channel.send(f":warning: {error_message}")
 
     async def _post_job_to_discord(self, job):
         """Post job to Discord channel"""
-        channel = self.bot.get_channel(settings.DISCORD_CHANNEL_ID)
+        async with db_manager.get_session() as session:
+            channel_id = await get_setting(session, "DISCORD_CHANNEL_ID")
+        channel = self.bot.get_channel(int(channel_id)) if channel_id else None
         if not channel:
-            logger.error(f"Channel {settings.DISCORD_CHANNEL_ID} not found")
-            await self._log_error_to_channel(f"Channel {settings.DISCORD_CHANNEL_ID} not found")
+            logger.error(f"Discord channel not found (ID: {channel_id})")
+            await self._log_error_to_channel(f"Discord channel not found (ID: {channel_id})")
             return
 
         embed = discord.Embed(
