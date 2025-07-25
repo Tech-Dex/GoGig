@@ -34,6 +34,12 @@ class RedditService:
                 subreddit = await self.reddit.subreddit(subreddit_name)
 
                 async for submission in subreddit.new(limit=limit):
+                    if submission.link_flair_text and not self._matches_flair(
+                        "HIRING", submission.link_flair_text
+                    ):
+                        # Skip submissions that do not match the hiring flair
+                        continue
+
                     if self._matches_keywords(submission.title, keywords):
                         job = Job(
                             reddit_id=submission.id,
@@ -54,6 +60,12 @@ class RedditService:
         """Check if text contains any of the keywords"""
         text_lower = text.lower()
         return any(keyword.lower() in text_lower for keyword in keywords)
+
+    @staticmethod
+    def _matches_flair(text: str, flair: str) -> bool:
+        """Check if text matches any of the specified flairs"""
+        text_lower = text.lower()
+        return text_lower in flair.lower()
 
     async def close(self):
         """Close Reddit client"""
